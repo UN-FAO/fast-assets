@@ -6,19 +6,19 @@ Scripts and Stylesheets for Form.io Projects
 Create a hidden component with the following default value (JavaScript)
 
 ```js
-const scripts = ['common/js/formio.min.js'];
-const styles = ['common/css/formio.min.css'];
+const scripts = ['base.min.js'];
+const styles = ['base.min.css'];
 const head = document.getElementsByTagName('head')[0];
 
-scripts.forEach(function(path) {
+scripts.forEach(function(file) {
   const script = document.createElement('script');
-  script.src = `https://fast-assets.surge.sh/${path}`;
+  script.src = `https://fast-assets.surge.sh/js/${file}`;
   head.appendChild(script);
 });
 
-styles.forEach(function(path) {
+styles.forEach(function(file) {
   const style = document.createElement('script');
-  style.href = `https://fast-assets.surge.sh/${path}`;
+  style.href = `https://fast-assets.surge.sh/css/${file}`;
   head.appendChild(style);
 });
 ```
