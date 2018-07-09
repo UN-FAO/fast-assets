@@ -72,11 +72,11 @@ function getLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(pos) {
           waitingDialog.hide();
-          resolve(pos);
+          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         });
     } else {
         waitingDialog.hide();
         reject('geolocation not available');
     }
   });
-}
+};
