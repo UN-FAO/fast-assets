@@ -30,7 +30,7 @@ The following are a collection of available functions.  Once the scripts are loa
 
 ### getLocation()
 
-Returns the latitude and longitude reported by the browser's navigator Web API.
+Returns the latitude and longitude reported by the browser's navigator Geolocation Web API.
 
 ```js
 getLocation().then(function(pos) {
@@ -39,3 +39,25 @@ getLocation().then(function(pos) {
   // handle navigator errors
 });
 ```
+
+### takeScreenshot(config)
+
+Returns the screenshot file object using the browser's navigator MediaDevice Web API
+
+```js
+takeScreenshot().then(function(file) {
+  // do something
+}).catch(function(err) {
+  // handle navigator errors
+});
+```
+
+You can pass an optional configuration object to change some of the default settings
+
+| Property    	| Description                                         	| Type   	| Default           	|
+|-------------	|-----------------------------------------------------	|--------	|-------------------	|
+| message     	| The dialog message                                  	| String 	| 'Take Screenshot' 	|
+| options     	| The dialog options                                  	| Object 	| {}                	|
+| placeholder 	| The image placeholder to use for blank image        	| String 	| ''                	|
+| width       	| The width (in pixels) to save the screenshot image  	| Number 	| 400               	|
+| heigth      	| The height (in pixels) to save the screenshot image 	| Number 	| 300               	|
