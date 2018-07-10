@@ -26,7 +26,9 @@ var waitingDialog = waitingDialog || (function ($) {
 		 * 				  options.dialogSize - bootstrap postfix for dialog size, e.g. "sm", "m";
 		 * 				  options.progressType - bootstrap postfix for progress bar type, e.g. "success", "warning".
 		 */
-		show: function (message, options) {
+		show: function (config) {
+			var message = 'Loading...';
+			var options = {};
 			// Assigning defaults
 			if (typeof options === 'undefined') {
 				options = {};
@@ -79,7 +81,7 @@ var $dialog = $(
 			'<video autoplay style="border: 1px solid #ddd; width: 400px; height: 300px;"></video>' +
 			'<hr/>' +
 			'<img src="" width="400px" height="300px" style="border: 1px solid #ddd;">' +
-			'<p><small class="text-muted">actual image size <span></span></small></p>' +
+			'<p><small class="text-muted">actual image size (<span></span>)</small></p>' +
 		'</div>' +
 		'<div class="modal-footer">' +
 			'<div class="row">' + 
@@ -98,6 +100,7 @@ var $dialog = $(
 	var img = $dialog.find('img').get(0);
 	var span = $dialog.find('span').get(0);
 
+	var filterIndex = 0;
 	var filters = [
     'grayscale',
     'sepia',
@@ -120,24 +123,22 @@ return {
 	 * 				  options.dialogSize - bootstrap postfix for dialog size, e.g. "sm", "m";
 	 * 				  options.progressType - bootstrap postfix for progress bar type, e.g. "success", "warning".
 	 */
-	show: function (config = {}) {
-		var message = 'Take Screenshot';
-		var options = {};
-		var media = null;
-		var value = null;
-		var done = function() {};
-		var error = function() {};
-		var width = 400;
-		var height = 300;
-		var filterIndex = 0;
+	show: function (config) {
+		var message = config.message;
+		var options = config.options;
+		var media = config.media;
+		var done = config.done;
+		var error = config.error;
+		var width = config.width;
+		var height = config.height;
 
-		img.src = placeholder;
+		img.src = config.placeholder || placeholder;
 
 		// Assigning defaults
 		if (config.hasOwnProperty('options')) {
 			options = config.options;
 		}
-		if (!config.hasOwnProperty('message')) {
+		if (config.hasOwnProperty('message')) {
 			message = config.message;
 		}
 		if (config.hasOwnProperty('media')) {
@@ -165,7 +166,6 @@ return {
 
 		video.onclick = function() {
 			video.className = filters[filterIndex++ % filters.length];
-			img.className = video.className;
 		};
 		
 		capture.onclick = function() {
@@ -175,6 +175,7 @@ return {
 				canvas.width = width;
 				canvas.height = height;
 				var factor = 1.0;
+				var styles = getComputedStyle(video);
 				
 				// Major resize (down)
 				if (width / video.videoWidth < 0.5 || height / video.videoHeight < 0.5) {
@@ -188,19 +189,13 @@ return {
 				oc.width = video.videoWidth * factor;
 				oc.height = video.videoHeight * factor;
 				octx.drawImage(video, 0, 0, oc.width, oc.height);
+				if (typeof ctx.filter !== 'undefined') {
+					ctx.filter = styles.filter || '';
+				}
 				ctx.drawImage(oc, 0, 0, oc.width, oc.height, 0, 0, canvas.width, canvas.height);
 
 				// Other browsers will fall back to image/png
 				img.src = canvas.toDataURL('image/png');
-				value = [{
-					storage: 'base64',
-					type: 'image/png',
-					url: img.src,
-					name: 'screenshot-' + uuidv4() + '.png',
-					originalName: 'screenshot.png',
-					data: img.src.split(',')[1],
-					size: Math.round((img.src.split(',')[1].length)*3/4)
-				}];
 				accept.disabled = false;
 			} catch(err) {
 				error(err);
@@ -209,7 +204,14 @@ return {
 
 		accept.onclick = function() {
 			video.srcObject.getTracks()[0].stop();
-			done(value);
+			done([{
+				storage: 'base64',
+				type: 'image/png',
+				url: img.src,
+				name: 'screenshot-' + uuidv4() + '.png',
+				originalName: 'screenshot.png',
+				size: Math.round((img.src.split(',')[1].length)*3/4)
+			}]);
 			$dialog.modal('hide');
 		}
 
@@ -264,8 +266,11 @@ function uuidv4() {
 }
 
 
-function getLocation() {
-  waitingDialog.show('Getting your location...', {dialogSize: 'sm', progressType: 'info'});
+function getLocation(config) {
+	config = typeof config === 'object' && config !== null ? config : {};
+	config.message = config.message || 'Getting your location...';
+	config.options = config.options || { dialogSize: 'sm', progressType: 'info' };
+  waitingDialog.show(config);
   return new Promise(function(resolve, reject) {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(pos) {
@@ -279,7 +284,13 @@ function getLocation() {
   });
 };
 
-function takeScreenshot(config = {}) {
+function takeScreenshot(config) {
+	config = typeof config === 'object' && config !== null ? config : {};
+	config.width = config.width || 400;
+	config.height = config.height || 300;
+	config.message = config.message || 'Take Screenshot';
+	config.options = config.options || {};
+
 	return new Promise(function(resolve, reject) {
 		if (!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
 			config.media = navigator.mediaDevices.getUserMedia({ video: true});
