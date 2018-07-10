@@ -17,7 +17,8 @@ scripts.forEach(function(file) {
 });
 
 styles.forEach(function(file) {
-  const style = document.createElement('script');
+  const style = document.createElement('link');
+  style.rel = 'stylesheet';
   style.href = `https://fast-assets.surge.sh/css/${file}`;
   head.appendChild(style);
 });
