@@ -21,10 +21,11 @@ var waitingDialog = waitingDialog || (function ($) {
 	return {
 		/**
 		 * Opens our dialog
-		 * @param message Custom message
-		 * @param options Custom options:
-		 * 				  options.dialogSize - bootstrap postfix for dialog size, e.g. "sm", "m";
-		 * 				  options.progressType - bootstrap postfix for progress bar type, e.g. "success", "warning".
+		 * @param config Custom configuration
+		 * 					config.message - Custom message
+		 * 					config.options - Custom options:
+		 * 				  			options.dialogSize - bootstrap postfix for dialog size, e.g. "sm", "m";
+		 * 				  			options.progressType - bootstrap postfix for progress bar type, e.g. "success", "warning".
 		 */
 		show: function (config) {
 			var message = 'Loading...';
@@ -68,6 +69,7 @@ var waitingDialog = waitingDialog || (function ($) {
 
 })(jQuery);
 
+// https://www.html5rocks.com/en/tutorials/getusermedia/intro/
 var screenshotDialog = screenshotDialog || (function ($) {
 	'use strict';
 
@@ -118,10 +120,11 @@ var $dialog = $(
 return {
 	/**
 	 * Opens our dialog
-	 * @param message Custom message
-	 * @param options Custom options:
-	 * 				  options.dialogSize - bootstrap postfix for dialog size, e.g. "sm", "m";
-	 * 				  options.progressType - bootstrap postfix for progress bar type, e.g. "success", "warning".
+	 * @param config Custom configuration:
+	 * 					config.message - Custom message
+	 * 					config.options - Custom options:
+	 * 				  			options.dialogSize - bootstrap postfix for dialog size, e.g. "sm", "m";
+	 * 				  			options.progressType - bootstrap postfix for progress bar type, e.g. "success", "warning".
 	 */
 	show: function (config) {
 		var message = config.message;
@@ -216,7 +219,9 @@ return {
 		}
 
 		cancel.onclick = function() {
-			video.srcObject.getTracks()[0].stop();
+			if (video.srcObject) {
+				video.srcObject.getTracks()[0].stop();
+			}
 			done(null);
 			$dialog.modal('hide');
 		};
@@ -238,21 +243,12 @@ return {
 			});
 		}
 
-		// Opening dialog
-		$dialog.modal();
-
 		if (media !== null) {
 			media.then(function(stream) {
 				video.srcObject = stream;
+				$dialog.modal();
 			}).catch(error);
 		}
-		
-	},
-	/**
-	 * Closes dialog
-	 */
-	hide: function () {
-		$dialog.modal('hide');
 	}
 };
 
@@ -294,6 +290,9 @@ function takeScreenshot(config) {
 	return new Promise(function(resolve, reject) {
 		if (!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
 			config.media = navigator.mediaDevices.getUserMedia({ video: true});
+			if (!config.media) {
+				reject('no media available');
+			}
 			config.done = resolve;
 			config.error = reject;
 			screenshotDialog.show(config);
